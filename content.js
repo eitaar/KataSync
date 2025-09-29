@@ -433,10 +433,11 @@ const observer = new MutationObserver((mutations) => {
     clearTimeout(window.gitwarsSubmitButtonTimeout);
     window.gitwarsSubmitButtonTimeout = setTimeout(() => {
       // Only monitor if we don't already have a monitored button
-      const existingMonitoredButton = document.querySelector('[data-gitwars-monitored="true"]');
-      if (!existingMonitoredButton) {
-        monitorSubmitButton();
-      }
+      // Remove monitored attribute from all buttons before monitoring a new one
+      document.querySelectorAll('[data-gitwars-monitored="true"]').forEach(btn => {
+        btn.removeAttribute('data-gitwars-monitored');
+      });
+      monitorSubmitButton();
     }, 500);
   }
 });
