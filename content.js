@@ -59,7 +59,10 @@ function getChallengeName() {
   }
   
   console.log('Could not extract challenge name, using fallback');
-  return 'unknown_challenge';
+  const now = new Date();
+  const pad = n => n.toString().padStart(2, '0');
+  const timestamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return `unknown_challenge_${timestamp}`;
 }
 
 // Function to extract user's code from the code editor
