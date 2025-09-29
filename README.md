@@ -1,4 +1,4 @@
-# GitWars Sync
+# KataSync
 
 A Chrome extension that automatically syncs your Codewars solutions to a GitHub repository.
 
@@ -17,11 +17,11 @@ A Chrome extension that automatically syncs your Codewars solutions to a GitHub 
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right corner
 4. Click "Load unpacked" and select the extension directory
-5. The GitWars Sync extension should now appear in your extensions list
+5. The KataSync extension should now appear in your extensions list
 
 ## Configuration
 
-1. Click on the GitWars Sync extension icon in your Chrome toolbar
+1. Click on the KataSync extension icon in your Chrome toolbar
 2. Fill in the required information:
    - **GitHub Personal Access Token**: Create one at https://github.com/settings/tokens with `repo` permissions
    - **Repository Owner**: Your GitHub username or organization

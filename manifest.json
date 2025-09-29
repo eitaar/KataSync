@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "GitWars Sync",
+  "name": "KataSync",
   "version": "1.0.0",
   "description": "Sync your Codewars solutions to GitHub automatically",
   "permissions": [
@@ -14,7 +14,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "GitWars Sync"
+    "default_title": "KataSync"
   },
   "content_scripts": [
     {

@@ -1,5 +1,5 @@
-// Background script for GitWars Sync extension
-console.log('GitWars Sync background script loaded');
+// Background script for KataSync extension
+console.log('KataSync background script loaded');
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -33,7 +33,7 @@ async function uploadToGitHub({ filename, content, token, owner, repo }) {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'GitWars-Sync-Extension'
+          'User-Agent': 'KataSync-Extension'
         }
       });
       
@@ -74,7 +74,7 @@ async function uploadToGitHub({ filename, content, token, owner, repo }) {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
-        'User-Agent': 'GitWars-Sync-Extension'
+        'User-Agent': 'KataSync-Extension'
       },
       body: JSON.stringify(uploadData)
     });
@@ -127,7 +127,7 @@ async function validateGitHubAccess(token, owner, repo) {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'GitWars-Sync-Extension'
+        'User-Agent': 'KataSync-Extension'
       }
     });
     
