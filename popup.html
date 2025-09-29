@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 400px;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .status.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <h2>GitWars Sync</h2>
+  
+  <div class="form-group">
+    <label for="githubToken">GitHub Personal Access Token:</label>
+    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+  </div>
+  
+  <div class="form-group">
+    <label for="repoOwner">Repository Owner:</label>
+    <input type="text" id="repoOwner" placeholder="your-username">
+  </div>
+  
+  <div class="form-group">
+    <label for="repoName">Repository Name:</label>
+    <input type="text" id="repoName" placeholder="codewars-solutions">
+  </div>
+  
+  <div class="form-group">
+    <label for="language">Programming Language:</label>
+    <select id="language">
+      <option value="javascript">JavaScript</option>
+      <option value="python">Python</option>
+      <option value="java">Java</option>
+      <option value="cpp">C++</option>
+      <option value="csharp">C#</option>
+      <option value="go">Go</option>
+      <option value="rust">Rust</option>
+      <option value="ruby">Ruby</option>
+      <option value="php">PHP</option>
+      <option value="typescript">TypeScript</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="extension">File Extension:</label>
+    <select id="extension">
+      <option value="js">js</option>
+      <option value="py">py</option>
+      <option value="java">java</option>
+      <option value="cpp">cpp</option>
+      <option value="cs">cs</option>
+      <option value="go">go</option>
+      <option value="rs">rs</option>
+      <option value="rb">rb</option>
+      <option value="php">php</option>
+      <option value="ts">ts</option>
+    </select>
+  </div>
+  
+  <button id="saveSettings">Save Settings</button>
+  
+  <div id="status" class="status"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
