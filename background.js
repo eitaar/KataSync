@@ -57,7 +57,7 @@ async function uploadToGitHub({ filename, content, token, owner, repo }) {
     
     // Prepare the upload data
     const uploadData = {
-      message: sha ? `Update solution: ${filename}` : `Add solution: ${filename}`,
+      message: sha ? `KataSync: Updated solution for ${filename}` : `KataSync: Added solution for ${filename}`,
       content: btoa(String.fromCharCode(...new TextEncoder().encode(content))), // Base64 encode with UTF-8 support
       branch: 'main'
     };

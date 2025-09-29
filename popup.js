@@ -68,6 +68,42 @@ document.addEventListener('DOMContentLoaded', async () => {
       showStatus('Error saving settings: ' + error.message, 'error');
     }
   });
+  
+  // Test code extraction button
+  document.getElementById('testCodeExtraction').addEventListener('click', async () => {
+    try {
+      // Get the active tab
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      
+      if (!tab) {
+        showStatus('No active tab found', 'error');
+        return;
+      }
+      
+      // Check if we're on a Codewars page
+      if (!tab.url.includes('codewars.com')) {
+        showStatus('Please navigate to a Codewars page first', 'error');
+        return;
+      }
+      
+      // Send message to content script to extract code
+      chrome.tabs.sendMessage(tab.id, { action: 'testCodeExtraction' }, (response) => {
+        if (chrome.runtime.lastError) {
+          showStatus('Error: ' + chrome.runtime.lastError.message, 'error');
+          return;
+        }
+        
+        if (response && response.success) {
+          showStatus('Code extracted! Check browser console for details.', 'success');
+        } else {
+          showStatus('Failed to extract code: ' + (response ? response.error : 'Unknown error'), 'error');
+        }
+      });
+      
+    } catch (error) {
+      showStatus('Error testing code extraction: ' + error.message, 'error');
+    }
+  });
 });
 
 function showStatus(message, type) {

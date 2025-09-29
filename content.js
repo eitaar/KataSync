@@ -1,211 +1,63 @@
 // Content script for KataSync extension
-console.log('KataSync content script loaded');
-
-// Function to extract challenge name from the first h4 element
+console.log('KataSync content script loaded'); 
+// Function to extract challenge name from the page title
 function getChallengeName() {
-  console.log('Extracting challenge name...');
-  
-  // Try different selectors for challenge name
-  const nameSelectors = [
-    'h4',
-    'h1',
-    'h2',
-    'h3',
-    '[data-testid="challenge-title"]',
-    '.kata-title',
-    '.challenge-title',
-    '.problem-title',
-    '.title'
-  ];
-  
-  for (const selector of nameSelectors) {
-    const element = document.querySelector(selector);
-    if (element && element.textContent.trim()) {
-      const challengeName = element.textContent.trim()
-        .replace(/\s+/g, '_')           // Replace spaces with underscores
-        .replace(/[^\w\-_]/g, '')       // Remove special characters except hyphens and underscores
-        .replace(/_{2,}/g, '_')         // Replace multiple underscores with single
-        .replace(/^_+|_+$/g, '');       // Remove leading/trailing underscores
-      
-      if (challengeName.length > 0) {
-        console.log('Found challenge name:', challengeName);
-        return challengeName;
-      }
-    }
-  }
-  
-  // Fallback: try to extract from URL
-  const urlPath = window.location.pathname;
-  const urlMatch = urlPath.match(/\/kata\/([^\/]+)/);
-  if (urlMatch && urlMatch[1]) {
-    const challengeName = urlMatch[1].replace(/[\-]+/g, '_');
-    console.log('Extracted challenge name from URL:', challengeName);
-    return challengeName;
-  }
-  
-  // Fallback: try to extract from page title
   const pageTitle = document.title;
-  if (pageTitle && pageTitle.includes('|')) {
-    const challengeName = pageTitle.split('|')[0].trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^\w\-_]/g, '')
-      .replace(/_{2,}/g, '_')
-      .replace(/^_+|_+$/g, '');
+  
+  // Pattern: "Training on {challenge title} | Codewars"
+  const titleMatch = pageTitle.match(/Training on (.+?) \| Codewars/i);
+  if (titleMatch && titleMatch[1]) {
+    const challengeTitle = titleMatch[1].trim();
+    const challengeName = challengeTitle
+      .replace(/\s+/g, '_')           // Replace spaces with underscores
+      .replace(/[^\w\-_]/g, '')       // Remove special characters except hyphens and underscores
+      .replace(/_{2,}/g, '_')         // Replace multiple underscores with single
+      .replace(/^_+|_+$/g, '');       // Remove leading/trailing underscores
     
     if (challengeName.length > 0) {
-      console.log('Extracted challenge name from page title:', challengeName);
       return challengeName;
     }
   }
-  
-  console.log('Could not extract challenge name, using fallback');
-  const now = new Date();
-  const pad = n => n.toString().padStart(2, '0');
-  const timestamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  // Final fallback with timestamp
+  const timestamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15);
   return `unknown_challenge_${timestamp}`;
 }
 
 // Function to extract user's code from the code editor
 function extractCode() {
   console.log('Attempting to extract code...');
-  
-  // First, try to find Monaco Editor (VS Code editor)
-  if (window.monaco && window.monaco.editor) {
-    const models = window.monaco.editor.getModels();
-    if (models && models.length > 0) {
-      console.log('Found Monaco editor models');
-      return models[0].getValue();
-    }
-  }
-  
-  // Try to find CodeMirror instances directly
-  if (window.CodeMirror) {
-    // Look for CodeMirror instances in the global scope
-    for (let prop in window) {
-      try {
-        if (window[prop] && window[prop].constructor && 
-            window[prop].constructor.name === 'CodeMirror') {
-          console.log('Found CodeMirror instance');
-          return window[prop].getValue();
-        }
-      } catch (e) {
-        // Ignore errors when checking properties
-      }
-    }
-  }
-  
   // Try different possible selectors for code editors on Codewars
-  const codeSelectors = [
-    // CodeMirror selectors
-    '.CodeMirror',
-    '.CodeMirror-code',
-    '.cm-editor .cm-content',
-    '.cm-content',
-    
-    // Monaco/VS Code editor selectors
-    '.monaco-editor',
-    '.view-lines',
-    '[data-testid="editor"]',
-    
-    // Ace editor selectors
-    '.ace_editor',
-    '.ace_content',
-    '.ace_text-input',
-    
-    // Generic code editor selectors
-    'textarea[name="code"]',
-    'textarea[class*="code"]',
-    'textarea[id*="code"]',
-    '#code',
-    '.code-editor',
-    '[role="textbox"]'
-  ];
+  // Prioritizing CodeMirror since Codewars uses it
+  const selector = ".CodeMirror";
   
-  for (const selector of codeSelectors) {
-    const element = document.querySelector(selector);
-    if (element) {
-      console.log('Found element with selector:', selector);
-      
-      // For CodeMirror
-      if (element.classList.contains('CodeMirror')) {
-        if (element.CodeMirror) {
-          console.log('Found CodeMirror instance on element');
-          return element.CodeMirror.getValue();
+  const element = document.querySelector(".CodeMirror");
+  if (element) {
+    console.log('Found element with selector:', selector, 'classList:', element.classList.toString());
+    console.log('Element type:', element.tagName, 'contentEditable:', element.contentEditable);
+    
+    // For CodeMirror (prioritized since Codewars uses it)
+    if (element.classList.contains('CodeMirror') || element.closest('.CodeMirror')) {
+      console.log('🎯 DETECTED CODE EDITOR: CodeMirror (DOM Element)');
+      // Try to get the actual CodeMirror element if we found a child
+      const codeMirrorElement = element.classList.contains('CodeMirror') ? element : element.closest('.CodeMirror');
+      // Try to get text from lines with more comprehensive selectors
+      const lineSelector = ".CodeMirror-line";
+      const lines = codeMirrorElement.querySelectorAll(lineSelector);
+      if (lines.length > 0) {
+        console.log('Extracting from CodeMirror lines using selector:', lineSelector, 'count:', lines.length);
+        const codeText = Array.from(lines).map(line => line.textContent).join('\n');
+        if (codeText && codeText.trim()) {
+          return codeText;
         }
-        
-        // Try to get text from lines
-        const lines = element.querySelectorAll('.CodeMirror-line, .cm-line');
-        if (lines.length > 0) {
-          console.log('Extracting from CodeMirror lines');
-          return Array.from(lines).map(line => line.textContent).join('\n');
-        }
-      }
-      
-      // For Monaco editor
-      if (element.classList.contains('monaco-editor') || element.classList.contains('view-lines')) {
-        const lines = element.querySelectorAll('.view-line, .mtk1, [class*="mtk"]');
-        if (lines.length > 0) {
-          console.log('Extracting from Monaco editor lines');
-          return Array.from(lines).map(line => line.textContent).join('\n');
-        }
-      }
-      
-      // For Ace editor
-      if (element.classList.contains('ace_content') || element.classList.contains('ace_editor')) {
-        const lines = element.querySelectorAll('.ace_line');
-        if (lines.length > 0) {
-          console.log('Extracting from Ace editor lines');
-          return Array.from(lines).map(line => line.textContent).join('\n');
-        }
-      }
-      
-      // For textarea or other input elements
-      if (element.value !== undefined) {
-        console.log('Extracting from textarea/input');
-        return element.value;
-      }
-      
-      // For contenteditable elements
-      if (element.contentEditable === 'true') {
-        console.log('Extracting from contenteditable');
-        return element.textContent || element.innerText;
-      }
-      
-      // For other elements with text content
-      const textContent = element.textContent || element.innerText;
-      if (textContent && textContent.trim().length > 10) {
-        console.log('Extracting from text content');
-        return textContent;
       }
     }
-  }
-  
-  // Fallback: try to find any textarea with code-like content
-  const textareas = document.querySelectorAll('textarea');
-  for (const textarea of textareas) {
-    if (textarea.value && textarea.value.trim().length > 10) {
-      // Check if it looks like code (contains common programming patterns)
-      const codePatterns = [
-        /function\s*\(/,
-        /def\s+\w+\s*\(/,
-        /class\s+\w+/,
-        /if\s*\(/,
-        /for\s*\(/,
-        /while\s*\(/,
-        /return\s+/,
-        /console\.log/,
-        /print\s*\(/
-      ];
-      
-      if (codePatterns.some(pattern => pattern.test(textarea.value))) {
-        console.log('Found code-like content in textarea');
-        return textarea.value;
-      }
+      // Fallback: try to get all text content from CodeMirror
+    const allText = codeMirrorElement.textContent;
+    if (allText && allText.trim().length > 10) {
+      console.log('Extracting all text content from CodeMirror element');
+      return allText;
     }
   }
-  
-  console.log('Could not extract code from any source');
-  return null;
 }
 
 // Function to get current date in dd-mm-yy format
@@ -220,65 +72,18 @@ function getCurrentDate() {
 // Function to find and monitor the submit button
 function monitorSubmitButton() {
   console.log('Looking for submit button...');
-  
-  // Common selectors for submit buttons on Codewars
-  const submitSelectors = [
-    '#submit_btn',
-    '[data-testid="submit"]',
-    '[data-testid="submit-button"]',
-    'button[type="submit"]',
-    '.submit-button',
-    '.btn-submit',
-    'button:contains("Submit")',
-    'input[value="Submit"]',
-    '[aria-label*="submit" i]',
-    '[title*="submit" i]'
-  ];
-  
+  console.log('DOM readyState:', document.readyState);
+  console.log('Total buttons on page:', document.querySelectorAll('button').length);
+
   let submitButton = null;
   
   // Try to find the submit button
-  for (const selector of submitSelectors) {
-    try {
-      submitButton = document.querySelector(selector);
-      if (submitButton) {
-        console.log('Found submit button with selector:', selector);
-        break;
-      }
-    } catch (e) {
-      // Ignore invalid selectors like :contains()
-    }
-  }
-  
-  // If not found by selector, try finding by text content
-  if (!submitButton) {
-    const buttons = document.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]');
-    for (const button of buttons) {
-      const text = (button.textContent || button.value || button.getAttribute('aria-label') || '').toLowerCase();
-      if (text.includes('submit') || text.includes('answer') || button.id === 'submit_btn') {
-        submitButton = button;
-        console.log('Found submit button by text/id:', text, button.id);
-        break;
-      }
-    }
-  }
-  
-  // Also look for buttons that might be submit buttons based on their parent context
-  if (!submitButton) {
-    const possibleSubmitButtons = document.querySelectorAll('button');
-    for (const button of possibleSubmitButtons) {
-      const parent = button.closest('.submit-container, .button-container, .actions, .kata-actions');
-      if (parent && (button.textContent || '').toLowerCase().includes('submit')) {
-        submitButton = button;
-        console.log('Found submit button in container context');
-        break;
-      }
-    }
-  }
-  
+  const selector = "#submit_btn";
+  submitButton = document.querySelector(selector);
   if (submitButton) {
+    console.log('Found submit button with selector:', selector, 'text:', submitButton.textContent?.trim());
     console.log('Monitoring submit button:', submitButton);
-    
+
     // Remove any existing listeners to avoid duplicates
     submitButton.removeEventListener('click', handleSubmitClick, true);
     
@@ -293,7 +98,7 @@ function monitorSubmitButton() {
     }
     
     // Store reference to avoid duplicate monitoring
-    submitButton.dataset.gitwarsMonitored = 'true';
+    submitButton.dataset.kataSyncMonitored = 'true';
   } else {
     console.log('Submit button not found, will retry...');
     // Retry after DOM updates
@@ -304,6 +109,8 @@ function monitorSubmitButton() {
 // Handle submit button click
 async function handleSubmitClick(event) {
   console.log('Submit button clicked!');
+  console.log('Event type:', event.type);
+  console.log('Event target:', event.target);
   
   try {
     // Extract code and challenge information
@@ -320,6 +127,7 @@ async function handleSubmitClick(event) {
     console.log('Challenge name:', challengeName);
     
     // Get settings from storage
+    console.log('Retrieving settings from storage...');
     const settings = await chrome.storage.sync.get([
       'githubToken',
       'repoOwner',
@@ -327,6 +135,13 @@ async function handleSubmitClick(event) {
       'language',
       'extension'
     ]);
+    console.log('Settings retrieved:', {
+      hasToken: !!settings.githubToken,
+      repoOwner: settings.repoOwner,
+      repoName: settings.repoName,
+      language: settings.language,
+      extension: settings.extension
+    });
     
     if (!settings.githubToken || !settings.repoOwner || !settings.repoName) {
       console.error('KataSync: Settings not configured');
@@ -336,8 +151,11 @@ async function handleSubmitClick(event) {
     
     // Create filename: {language}-{dd-mm-yy}-{challenge_name}.{extension}
     const filename = `${settings.language}-${currentDate}-${challengeName}.${settings.extension}`;
+    console.log('Generated filename:', filename);
+    console.log('Code to upload length:', code.length);
     
     // Send message to background script to upload to GitHub
+    console.log('Sending message to background script...');
     chrome.runtime.sendMessage({
       action: 'uploadToGitHub',
       data: {
@@ -399,50 +217,51 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(monitorSubmitButton, 1000);
 }
-
-// Also monitor for dynamic content changes
-const observer = new MutationObserver((mutations) => {
-  let shouldCheckForSubmitButton = false;
-  
-  mutations.forEach((mutation) => {
-    if (mutation.type === 'childList') {
-      // Check if submit button was added
-      const addedNodes = Array.from(mutation.addedNodes);
-      const hasSubmitButton = addedNodes.some(node => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          // Check if the node itself is a submit button or contains one
-          return node.querySelector && (
-            node.querySelector('#submit_btn, [data-testid="submit"], button[type="submit"]') ||
-            node.id === 'submit_btn' ||
-            (node.tagName === 'BUTTON' && node.textContent.toLowerCase().includes('submit')) ||
-            // Check if it's a form or container that might contain submit buttons
-            node.querySelector && node.querySelector('button, input[type="submit"]')
-          );
-        }
-        return false;
-      });
+// Listen for messages from popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'testCodeExtraction') {
+    console.log('🧪 TEST CODE EXTRACTION TRIGGERED FROM POPUP');
+    console.log('==========================================');
+    
+    try {
+      const code = extractCode();
+      const challengeName = getChallengeName();
       
-      if (hasSubmitButton) {
-        shouldCheckForSubmitButton = true;
+      console.log('📝 EXTRACTED CODE:');
+      console.log('==================');
+      if (code) {
+        console.log(code);
+        console.log('\n📊 CODE STATS:');
+        console.log('Length:', code.length, 'characters');
+        console.log('Lines:', code.split('\n').length);
+      } else {
+        console.log('❌ No code extracted');
       }
-    }
-  });
-  
-  if (shouldCheckForSubmitButton) {
-    // Debounce the monitoring check to avoid excessive calls
-    clearTimeout(window.gitwarsSubmitButtonTimeout);
-    window.gitwarsSubmitButtonTimeout = setTimeout(() => {
-      // Only monitor if we don't already have a monitored button
-      // Remove monitored attribute from all buttons before monitoring a new one
-      document.querySelectorAll('[data-gitwars-monitored="true"]').forEach(btn => {
-        btn.removeAttribute('data-gitwars-monitored');
+      
+      console.log('\n🏷️ CHALLENGE NAME:');
+      console.log('==================');
+      console.log(challengeName);
+      
+      console.log('\n🔍 PAGE INFO:');
+      console.log('=============');
+      console.log('URL:', window.location.href);
+      console.log('Title:', document.title);
+      console.log('CodeMirror available:', !!window.CodeMirror);
+      console.log('Monaco available:', !!(window.monaco && window.monaco.editor));
+      
+      console.log('\n==========================================');
+      
+      sendResponse({ 
+        success: true, 
+        code: code, 
+        challengeName: challengeName,
+        codeLength: code ? code.length : 0
       });
-      monitorSubmitButton();
-    }, 500);
+    } catch (error) {
+      console.error('❌ Error during test extraction:', error);
+      sendResponse({ success: false, error: error.message });
+    }
+    
+    return true; // Keep message channel open for async response
   }
-});
-
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
 });
