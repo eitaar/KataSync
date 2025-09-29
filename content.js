@@ -191,9 +191,7 @@ function extractCode() {
         /while\s*\(/,
         /return\s+/,
         /console\.log/,
-        /print\s*\(/,
-        /\{.*\}/,
-        /\[.*\]/
+        /print\s*\(/
       ];
       
       if (codePatterns.some(pattern => pattern.test(textarea.value))) {
