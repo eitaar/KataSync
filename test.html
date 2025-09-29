@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GitWars Sync Test Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .code-editor {
+      width: 100%;
+      height: 200px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      font-family: monospace;
+      background-color: #f8f8f8;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .info {
+      background-color: #e7f3ff;
+      border: 1px solid #b3d7ff;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>GitWars Sync Test Page</h1>
+  
+  <div class="info">
+    <strong>Instructions:</strong>
+    <ol>
+      <li>Load the GitWars Sync extension in Chrome</li>
+      <li>Configure your GitHub settings in the extension popup</li>
+      <li>Write some code in the text area below</li>
+      <li>Click the "Submit" button to test the extension</li>
+      <li>Check your GitHub repository for the uploaded file</li>
+    </ol>
+  </div>
+  
+  <h4>Two Sum Problem</h4>
+  
+  <p>Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.</p>
+  
+  <textarea class="code-editor" id="code" name="code" placeholder="Write your solution here...">
+function twoSum(nums, target) {
+    const map = new Map();
+    
+    for (let i = 0; i < nums.length; i++) {
+        const complement = target - nums[i];
+        
+        if (map.has(complement)) {
+            return [map.get(complement), i];
+        }
+        
+        map.set(nums[i], i);
+    }
+    
+    return [];
+}
+  </textarea>
+  
+  <div>
+    <button id="submit_btn" type="submit">Submit</button>
+    <button onclick="location.reload()">Reset</button>
+  </div>
+  
+  <div class="info">
+    <strong>Note:</strong> This test page simulates a Codewars challenge page structure. 
+    The extension should detect the submit button click and extract the code from the textarea.
+  </div>
+  
+  <script>
+    // Add some logging to help with debugging
+    document.getElementById('submit_btn').addEventListener('click', function() {
+      console.log('Test submit button clicked');
+      console.log('Code content:', document.getElementById('code').value);
+    });
+  </script>
+</body>
+</html>
