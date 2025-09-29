@@ -18,6 +18,11 @@ async function uploadToGitHub({ filename, content, token, owner, repo }) {
   try {
     console.log('Uploading to GitHub:', { filename, owner, repo });
     
+    // Validate inputs
+    if (!filename || !content || !token || !owner || !repo) {
+      throw new Error('Missing required parameters for GitHub upload');
+    }
+    
     // First, check if the file already exists
     const checkUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}`;
     let sha = null;
@@ -36,14 +41,23 @@ async function uploadToGitHub({ filename, content, token, owner, repo }) {
         const existingFile = await checkResponse.json();
         sha = existingFile.sha;
         console.log('File exists, will update with SHA:', sha);
+      } else if (checkResponse.status === 404) {
+        console.log('File does not exist, will create new file');
+      } else {
+        // Handle other HTTP errors
+        const errorData = await checkResponse.json().catch(() => ({}));
+        throw new Error(`Failed to check file existence: ${errorData.message || checkResponse.statusText}`);
       }
     } catch (error) {
+      if (error.message.includes('Failed to check file existence')) {
+        throw error;
+      }
       console.log('File does not exist, will create new file');
     }
     
     // Prepare the upload data
     const uploadData = {
-      message: `Add solution: ${filename}`,
+      message: sha ? `Update solution: ${filename}` : `Add solution: ${filename}`,
       content: btoa(unescape(encodeURIComponent(content))), // Base64 encode with UTF-8 support
       branch: 'main'
     };
@@ -51,7 +65,6 @@ async function uploadToGitHub({ filename, content, token, owner, repo }) {
     // If file exists, include the SHA for update
     if (sha) {
       uploadData.sha = sha;
-      uploadData.message = `Update solution: ${filename}`;
     }
     
     // Upload/update the file
@@ -67,8 +80,20 @@ async function uploadToGitHub({ filename, content, token, owner, repo }) {
     });
     
     if (!uploadResponse.ok) {
-      const errorData = await uploadResponse.json();
-      throw new Error(`GitHub API error: ${errorData.message || uploadResponse.statusText}`);
+      const errorData = await uploadResponse.json().catch(() => ({}));
+      
+      // Provide more specific error messages
+      if (uploadResponse.status === 401) {
+        throw new Error('Invalid GitHub token or insufficient permissions');
+      } else if (uploadResponse.status === 404) {
+        throw new Error('Repository not found or you do not have access to it');
+      } else if (uploadResponse.status === 403) {
+        throw new Error('Access forbidden. Check your token permissions or repository access');
+      } else if (uploadResponse.status === 422) {
+        throw new Error('Invalid request. Please check your repository settings');
+      } else {
+        throw new Error(`GitHub API error (${uploadResponse.status}): ${errorData.message || uploadResponse.statusText}`);
+      }
     }
     
     const result = await uploadResponse.json();
@@ -76,12 +101,21 @@ async function uploadToGitHub({ filename, content, token, owner, repo }) {
     
     return {
       url: result.content.html_url,
-      sha: result.content.sha
+      sha: result.content.sha,
+      filename: filename
     };
     
   } catch (error) {
     console.error('Error uploading to GitHub:', error);
-    throw error;
+    
+    // Enhance error messages for common issues
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Network error: Unable to connect to GitHub. Please check your internet connection.');
+    } else if (error.message.includes('NetworkError')) {
+      throw new Error('Network error: Please check your internet connection and try again.');
+    } else {
+      throw error;
+    }
   }
 }
 
