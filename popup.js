@@ -1,4 +1,4 @@
-// Popup script for GitWars Sync extension
+// Popup script for KataSync extension
 document.addEventListener('DOMContentLoaded', async () => {
   // Load saved settings
   const settings = await chrome.storage.sync.get([

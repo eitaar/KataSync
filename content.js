@@ -1,5 +1,5 @@
-// Content script for GitWars Sync extension
-console.log('GitWars Sync content script loaded');
+// Content script for KataSync extension
+console.log('KataSync content script loaded');
 
 // Function to extract challenge name from the first h4 element
 function getChallengeName() {
@@ -329,8 +329,8 @@ async function handleSubmitClick(event) {
     ]);
     
     if (!settings.githubToken || !settings.repoOwner || !settings.repoName) {
-      console.error('GitWars Sync: Settings not configured');
-      showNotification('Please configure GitWars Sync settings first!', 'error');
+      console.error('KataSync: Settings not configured');
+      showNotification('Please configure KataSync settings first!', 'error');
       return;
     }
     
