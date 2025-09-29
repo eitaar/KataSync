@@ -255,7 +255,7 @@ function monitorSubmitButton() {
     const buttons = document.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]');
     for (const button of buttons) {
       const text = (button.textContent || button.value || button.getAttribute('aria-label') || '').toLowerCase();
-      if (text.includes('submit') || text.includes('answer') || text.includes('run tests') || button.id === 'submit_btn') {
+      if (text.includes('submit') || text.includes('answer') || button.id === 'submit_btn') {
         submitButton = button;
         console.log('Found submit button by text/id:', text, button.id);
         break;
